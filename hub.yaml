@@ -1,0 +1,15 @@
+# Your hub: its name, its look, and its packages. Push, and the "Publish the hub" workflow
+# publishes it on GitHub Pages - a Unity package registry and the hub's manifest, nothing to run.
+name: My Studio
+# logo: logo.png          # a file of this repository, or an address
+# color: "#336699"
+# scopes: [com.mystudio]  # empty: the first two segments of your packages' names
+
+packages:
+  # Each repository whose releases carry the package's tarball (.tgz): see docs/packages.md.
+  - github: glitchr-studio/unity-licensing
+
+# Other sources your hub's visitors may add in one click (optional).
+sources:
+  # - { name: OpenUPM, type: upm, url: https://package.openupm.com, scopes: [com.cysharp.unitask] }
+  # - { name: A Git package, type: git, url: https://github.com/owner/repository.git }

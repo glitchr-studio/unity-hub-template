@@ -1,0 +1,56 @@
+# Publishes the hub on GitHub Pages: on a push, every hour (a package's new release), by hand, or
+# when a package's release workflow says so (repository_dispatch "package-released").
+# Settings > Pages > Build and deployment > Source: GitHub Actions.
+name: Publish the hub
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [package-released]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      - run: composer install --no-interaction --no-progress
+      - name: Build the hub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          owner="${{ github.repository_owner }}"
+          name="${{ github.event.repository.name }}"
+          # <owner>.github.io is served at the root; any other repository under its name.
+          if [ "$name" = "$owner.github.io" ]; then url="https://$owner.github.io"; else url="https://$owner.github.io/$name"; fi
+          vendor/bin/omnihub build hub.yaml _site --url="$url"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

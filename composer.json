@@ -1,0 +1,18 @@
+{
+    "name": "my-studio/unity-hub",
+    "description": "A Unity package hub published on GitHub Pages: built by omnisense/omnihub, exported by omnibridge/static.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.2",
+        "omnibridge/static": "1.x-dev",
+        "omnihub/github": "1.x-dev",
+        "omnisense/omnihub": "1.x-dev",
+        "symfony/yaml": "^7.0|^8.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}
