@@ -31,15 +31,26 @@ jobs:
           php-version: '8.3'
           tools: composer
       - run: composer install --no-interaction --no-progress
+      # GitHub's answers (their ETags) kept between builds: a 304 costs nothing of the rate limit.
+      - uses: actions/cache@v4
+        with:
+          path: .omnihub
+          key: omnihub-github-${{ github.run_id }}
+          restore-keys: omnihub-github-
       - name: Build the hub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # A repository variable: true resolves the "github" sources now (public repositories only).
+          RESOLVE_GITHUB: ${{ vars.HUB_RESOLVE_GITHUB }}
         run: |
           owner="${{ github.repository_owner }}"
           name="${{ github.event.repository.name }}"
           # <owner>.github.io is served at the root; any other repository under its name.
           if [ "$name" = "$owner.github.io" ]; then url="https://$owner.github.io"; else url="https://$owner.github.io/$name"; fi
-          vendor/bin/omnihub build hub.yaml _site --url="$url"
+          vendor/bin/omnihub check hub.yaml --url="$url"
+          resolve=""
+          if [ "$RESOLVE_GITHUB" = "true" ]; then resolve="--resolve-github --github-cache=.omnihub/github.json"; fi
+          vendor/bin/omnihub build hub.yaml _site --url="$url" $resolve
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

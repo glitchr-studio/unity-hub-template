@@ -7,8 +7,9 @@ Action publishes on GitHub Pages:
 - a **UPM scoped registry** as static files - what Unity's Package Manager
   reads (`/<package>`, `/-/v1/search`, `/-/all`); the tarballs stay as the
   GitHub Release assets of each package's repository;
-- the **hub manifest** (`/-/hub.json`) that hub clients read: the Glitch Art
-  Hub window in the Unity editor (`com.glitchr.hub`) and the desktop hub;
+- the **hub manifest** (`/-/hub.json`) that hub clients read: Forge Store,
+  the window in the Unity editor (`io.glitchr.store`), and Forge Hub, the
+  desktop app;
 - a **page** that lists the packages and how to add the hub to a project.
 
 Free and open: a static hub lists, installs and updates; it sells nothing
@@ -33,14 +34,62 @@ Free and open: a static hub lists, installs and updates; it sells nothing
 ]
 ```
 
-Then Window > Package Manager > My Registries. Or, with the Glitch Art Hub
-window: Sources > Add > Hub (manifest URL) >
+Then Window > Package Manager > My Registries. Or, in Forge Store
+(Window > Forge Store): Sources > Add > Hub (manifest URL) >
 `https://<owner>.github.io/<repository>/-/hub.json`.
+
+## Its look: `theme`
+
+```yaml
+theme:
+  accent: "#336699"       # Unity's light skin
+  accentDark: "#6699cc"   # its dark skin
+  logo: logo.png          # a file of this repository, published with the hub - or https://
+  banner: banner.png
+```
+
+Data only, never code. The colours are `#rgb` or `#rrggbb` (quote them:
+YAML reads `#` as a comment); the pictures are files of this repository or
+`https://` addresses, 1 MB at most. The manifest carries them as
+`"theme": {"accent", "accentDark", "logo", "banner"}` - the files' addresses
+made absolute - and also as the older `color` and `logo` keys. Forge Store
+draws the accent and the logo; the banner is for the clients with room for
+one, and heads the hub's page.
+
+## A GitHub owner as a source
+
+```yaml
+sources:
+  - { name: Acme on GitHub, type: github, owner: acme, pattern: "unity-*", install: false }
+```
+
+Every repository of the organisation or user `owner` whose name matches
+`pattern` (`*` any run of characters, `?` one, several patterns separated by
+commas, case ignored) and whose root holds a `package.json` naming a
+package. `install: true` marks them as packages every project of the team
+gets (Forge Hub's Prepare writes them in).
+
+By default the source is written into `hub.json` as it is, and each hub
+client resolves it through GitHub's REST API with the user's own GitHub
+token: a team's members see its private repositories too, and a new
+repository shows without publishing the hub again.
+
+To resolve it when the hub is built instead - for clients without GitHub
+support, or to freeze the list - set the repository variable
+`HUB_RESOLVE_GITHUB` to `true` (Settings > Secrets and variables > Actions >
+Variables). The build then lists the owner's **public** repositories only (a
+static hub is public; a private repository is never read, even with a token
+that could), each written as a `git` source at its newest version tag. The
+answers' ETags are kept in the Actions cache between builds and the API's
+rate limit is respected; a source that cannot be resolved is left as it is.
+Nothing is scraped: the REST API only.
 
 ## How it is built
 
-`vendor/bin/omnihub build hub.yaml _site` (omnisense/omnihub): the packages
-read through omnihub/github, the registry's documents written once by the
+`vendor/bin/omnihub build hub.yaml _site` (omnisense/omnihub), after
+`vendor/bin/omnihub check hub.yaml`, which lists every mistake in `hub.yaml`
+at once, each with its key (`sources[1].pattern: ...`): the packages read
+through omnihub/github, the registry's documents written once by the
 same code a forge serves them with, the folder exported by omnibridge/static.
 Unity reads documents GitHub Pages serves as `application/octet-stream` at
 paths without extension, and a search whose query string the host ignores (it

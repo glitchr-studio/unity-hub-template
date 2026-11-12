@@ -30,5 +30,5 @@ repository:
 
 The hub's page lists its packages and the lines to add to a project's
 `Packages/manifest.json`; Window > Package Manager > My Registries then lists
-them. A hub client - the Glitch Art Hub window (`com.glitchr.hub`) - takes
-the hub's manifest address, `https://<owner>.github.io/<repository>/-/hub.json`.
+them. A hub client - Forge Store, the Unity window (`io.glitchr.store`) -
+takes the hub's manifest address, `https://<owner>.github.io/<repository>/-/hub.json`.

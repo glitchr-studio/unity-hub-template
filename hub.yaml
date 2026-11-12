@@ -1,15 +1,29 @@
 # Your hub: its name, its look, and its packages. Push, and the "Publish the hub" workflow
 # publishes it on GitHub Pages - a Unity package registry and the hub's manifest, nothing to run.
+# Check it first, if you like: vendor/bin/omnihub check hub.yaml --url=https://<owner>.github.io/<repository>
 name: My Studio
-# logo: logo.png          # a file of this repository, or an address
-# color: "#336699"
 # scopes: [com.mystudio]  # empty: the first two segments of your packages' names
+
+# The hub's look in the hub clients (Forge Store in Unity, Forge Hub) and on its page: data only.
+# Colours are #rgb or #rrggbb, quoted; pictures are files of this repository (published with the
+# hub) or https:// addresses, 1 MB at most.
+# theme:
+#   accent: "#336699"       # Unity's light skin
+#   accentDark: "#6699cc"   # its dark skin (the accent when left out)
+#   logo: logo.png
+#   banner: banner.png
 
 packages:
   # Each repository whose releases carry the package's tarball (.tgz): see docs/packages.md.
-  - github: glitchr-studio/unity-licensing
+  # - github: acme/unity-tool
 
-# Other sources your hub's visitors may add in one click (optional).
+# Other sources your hub's visitors get in one click (optional).
 sources:
   # - { name: OpenUPM, type: upm, url: https://package.openupm.com, scopes: [com.cysharp.unitask] }
-  # - { name: A Git package, type: git, url: https://github.com/owner/repository.git }
+  # - { name: A Git package, type: git, url: https://github.com/acme/unity-tool.git, package: com.acme.tool }
+  #
+  # Every repository of a GitHub organisation or user whose name matches the pattern ("*" any run,
+  # "?" one character, several separated by commas) and whose root holds a package.json. The hub
+  # clients list them with the user's own GitHub token, private ones included for a team's members.
+  # install: true puts them in every project of the team. See README > A GitHub owner as a source.
+  # - { name: Acme on GitHub, type: github, owner: acme, pattern: "unity-*", install: false }
