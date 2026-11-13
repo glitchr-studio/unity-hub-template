@@ -22,6 +22,13 @@ name: My Studio
 #   # After a change of key (vendor/bin/omnihub key rotate <old key file> <new key file>):
 #   # previousKey: "<the old public key>"
 #   # rotation: "<the old key's signature of the new one>"
+#   # previousKeyValidUntil: <until when the old key's licences open, UNIX seconds - key rotate prints it>
+# The packages sold with a licence, each with where one is bought (https, optional): Forge Store shows
+# "Get" and "Enter a licence" on these only, the others are free. licence sign and licence verify take
+# the hub's address from url: (the one the workflow publishes at).
+# url: https://<owner>.github.io/<repository>
+# licensed:
+#   - { package: com.mystudio.tool, get: "https://mystudio.example/buy/tool" }
 
 packages:
   # Each repository whose releases carry the package's tarball (.tgz): see docs/packages.md.

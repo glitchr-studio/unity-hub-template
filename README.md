@@ -107,24 +107,83 @@ offline key can be shared.
 2. **Publish the public key**: uncomment `licensing` in `hub.yaml` and paste
    the `publicKey` that `key generate` printed. Forge Store pins it the first
    time a user adds your hub, and checks your licences against the pinned key.
-3. **Sign a licence** for each sale:
-   `vendor/bin/omnihub licence sign ~/.config/omnihub/my-studio.key payload.json`
-   (Forge Seal's token form; see omnisense/omnihub's README for the payload).
+3. **Sign a licence** for each sale, in this repository's folder (the
+   commands read `./hub.yaml`; give it `url: https://<owner>.github.io/<repository>`,
+   the address the workflow publishes at):
+
+   ```sh
+   token=$(vendor/bin/omnihub licence sign ~/.config/omnihub/my-studio.key \
+       --package com.mystudio.tool --licensee "Ada <ada@example.org>" \
+       --days 365 --log ~/.config/omnihub/sales.jsonl)
+   vendor/bin/omnihub licence verify hub.yaml "$token" --package com.mystudio.tool
+   echo "$token"   # the line to send to the buyer
+   ```
+
+   The registry the licence names and the key it is checked against come
+   from `hub.yaml`: `licence sign` refuses a key that is not the one
+   `licensing.publicKey` publishes. The token is one line on stdout (a
+   summary goes to stderr); `licence verify` says what Forge Store will say
+   ("Forge Store opens it.", or why it refuses it). Send that line to the
+   buyer (nothing is written into this repository), who pastes it under the
+   package's **Enter a licence** in Forge Store. Without `--days` (or `--valid-until <YYYY-MM-DD>`) it has no end;
+   without `--machine` or `--machine-hash` it opens on any machine. To bind it
+   to one machine, ask the buyer for **This machine's licence id** (Forge
+   Store shows it under Enter a licence, with Copy) and sign with
+   `--machine-hash <that id>`.
 4. **Change the key** (a new machine, a key you fear was seen) with a
    rotation the old key signs, so your users' Forge Store moves its pin
    without asking them:
 
    ```sh
    vendor/bin/omnihub key generate ~/.config/omnihub/my-studio-2.key
-   vendor/bin/omnihub key rotate ~/.config/omnihub/my-studio.key ~/.config/omnihub/my-studio-2.key
+   vendor/bin/omnihub key rotate ~/.config/omnihub/my-studio.key ~/.config/omnihub/my-studio-2.key [--previous-until 2026-12-31]
    ```
 
    Paste the `licensing` section it prints (`publicKey`, `previousKey`,
-   `rotation`), push, and sign with the new key from then on. `omnihub check`
-   verifies the rotation before anything is published. Forge Store then
-   checks licences against the new key only: **licences signed with the old
-   key stop passing**, so sign your buyers' licences again with the new one.
-   That is also why a leaked key is rotated at once.
+   `rotation`, `previousKeyValidUntil`), push, and sign with the new key from
+   then on. `omnihub check` verifies the rotation before anything is
+   published. Forge Store keeps opening the licences the old key signed
+   until `previousKeyValidUntil` (30 days after `key rotate` unless
+   `--previous-until`), and never longer than 30 days after a user sees the
+   rotation: **licences signed with the old key, those without an end too,
+   stop opening by then.** Sign them again with the new key from your sales
+   log and send each buyer their new line:
+
+   ```sh
+   vendor/bin/omnihub licence resign ~/.config/omnihub/my-studio-2.key ~/.config/omnihub/sales.jsonl --log ~/.config/omnihub/sales.jsonl
+   ```
+
+   It prints `licensee<TAB>package<TAB>token`, one licence per line, each as
+   it was sold (those that ran out, and those the new key already signed,
+   are left); `--log` adds the new ones to the log for the next rotation.
+   A leaked key is rotated at once all the same: the shorter
+   `--previous-until`, the sooner what it signs stops opening.
+
+**What you sell: `licensed`.** A static hub has no catalogue, so list the
+packages that take a licence, each with the address where one is bought
+(`get`, https, optional):
+
+```yaml
+licensed:
+  - { package: com.mystudio.tool, get: "https://mystudio.example/buy/tool" }
+```
+
+The build writes it into `hub.json` (only beside `licensing`) and the hub's
+page links each `get`. Forge Store then shows **Get** and **Enter a
+licence** on those packages only; your other packages are free. Without
+`licensed`, it offers the licence field on every package of a hub that
+publishes a key.
+
+**The sales log.** `--log` appends one line per licence: its payload and the
+key's fingerprint - never the key, the token only with `--log-token`;
+created readable by you only. It names your buyers: like the private key,
+**keep it out of this repository** (a path such as `~/.config/omnihub/`, as
+above; omnihub warns when either is inside a git work tree). It is what
+`licence resign` reads after a rotation.
+
+What a static hub's licence checks: the store, the package, an end, and one
+machine when you asked for it. What it cannot: seats and revocation - a
+copied line opens wherever it is pasted. A light protection, not DRM.
 
 The template ships no key: without a `licensing` section the hub sells
 nothing and builds as before.
