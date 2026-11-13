@@ -188,6 +188,80 @@ copied line opens wherever it is pasted. A light protection, not DRM.
 The template ships no key: without a `licensing` section the hub sells
 nothing and builds as before.
 
+## The commands and their flags
+
+Run in this repository's folder, after `composer install`
+(`vendor/bin/omnihub ...`). A misspelt flag is refused, never ignored. A day
+is `YYYY-MM-DD` (its first second, UTC) or UNIX seconds. Private keys stay
+outside this repository; no command prints one.
+
+**`key generate <private-key-file>`** - a new Ed25519 pair. The private key
+is written to that file only (readable by you only; never over an existing
+file; a warning when the path is inside a git work tree); the `licensing`
+section with its `publicKey` is printed for `hub.yaml`. No flag.
+
+**`key public <private-key-file>`** - prints the public key of a private key
+(what `licensing.publicKey` must be). No flag.
+
+**`key rotate <old-private-key-file> <new-public-key|new-private-key-file>`**
+- the old key signs the hand-over to the new one; prints the `licensing`
+section to paste (`publicKey`, `previousKey`, `rotation`,
+`previousKeyValidUntil`).
+
+| Flag | |
+|---|---|
+| `--previous-until <day>` | until when licences the old key signed still open (`previousKeyValidUntil`); default 30 days from now |
+
+**`licence sign <private-key-file> [payload.json|-]`** - one licence; the
+token alone on stdout (one line, for the buyer), a summary on stderr.
+
+| Flag | |
+|---|---|
+| `--package <upm-name>` | the package it opens (a warning when `licensed` does not list it) |
+| `--software <slug>` | a game or an application instead of a package |
+| `--licensee <text>` | required: who bought it (200 characters at most) |
+| `--hub <hub.yaml>` | default `./hub.yaml`: the registry from its `url:`, and the key checked against its `licensing.publicKey` |
+| `--registry <url>` | instead of a hub.yaml: the hub's address, https |
+| `--valid-until <day>` or `--days <n>` | an end; without either, none |
+| `--updates-until <day>` | the newest releases it covers; without it, every release |
+| `--machine <identifier>` | one machine, hashed here (never written in clear) |
+| `--machine-hash <64 hex>` | one machine, by the id the buyer copied from Forge Store (**This machine's licence id**) |
+| `--issued-at <day>` | default now |
+| `--log <file.jsonl>` | appends the licence's payload and the key's fingerprint (never the key) to your sales log, outside this repository |
+| `--log-token` | with `--log`: the token too |
+
+Without `--machine` or `--machine-hash` it opens on any machine. A payload
+file (or `-` for stdin) is still read; the flags override it.
+
+**`licence verify <public-key|hub.yaml|hub.json> <token|->`**, or
+**`licence verify <token|-> --hub <hub.yaml|hub.json>`** /
+**`--key <public-key>`** - says what Forge Store will say ("Forge Store opens
+it.", exit 0; or why it refuses it, exit 1). Public keys only.
+
+| Flag | |
+|---|---|
+| `--registry <url>` | the registry to compare with (otherwise the hub's) |
+| `--package <upm-name>` / `--software <slug>` | the package or software it must open |
+| `--machine <identifier>` / `--machine-hash <64 hex>` | the machine it must open on |
+| `--at <day>` | checked as of that day instead of now |
+
+What is not given is said not compared.
+
+**`licence resign <new-private-key-file> <sales-log.jsonl>`** - after a
+rotation, every licence of the log signed again with the new key, as it was
+sold; prints `licensee<TAB>package<TAB>token` per licence (those that ran
+out, and those the new key already signed, are left).
+
+| Flag | |
+|---|---|
+| `--hub <hub.yaml>` / `--registry <url>` | as for `licence sign` |
+| `--log <file.jsonl>` | appends the new licences to a log (the same file is fine), for the next rotation |
+| `--log-token` | with `--log`: the tokens too |
+
+**`check <hub.yaml> [--url=<address>]`** and **`build <hub.yaml> <folder>
+[--url=<address>] [--strict] [--resolve-github [--github-cache=<file>]]`** -
+what the workflow runs (below).
+
 ## How it is built
 
 `vendor/bin/omnihub build hub.yaml _site` (omnisense/omnihub), after
@@ -195,6 +269,7 @@ nothing and builds as before.
 at once, each with its key (`sources[1].pattern: ...`): the packages read
 through omnihub/github, the registry's documents written once by the
 same code a forge serves them with, the folder exported by omnibridge/static.
+`--strict` fails the build on a broken link or an export error.
 Unity reads documents GitHub Pages serves as `application/octet-stream` at
 paths without extension, and a search whose query string the host ignores (it
 holds every package; Unity filters by its scopes).

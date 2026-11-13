@@ -1,0 +1,40 @@
+# Checks the hub without publishing it: on a pull request, a push to another branch than main
+# (main publishes, publish.yml), or by hand - hub.yaml read (every mistake at once) and the hub built
+# with --strict (a broken link or an export error fails), into a folder that is thrown away.
+name: Check the hub
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      - run: composer install --no-interaction --no-progress
+      - name: Check and build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          owner="${{ github.repository_owner }}"
+          name="${{ github.event.repository.name }}"
+          if [ "$name" = "$owner.github.io" ]; then url="https://$owner.github.io"; else url="https://$owner.github.io/$name"; fi
+          vendor/bin/omnihub check hub.yaml --url="$url"
+          vendor/bin/omnihub build hub.yaml "$RUNNER_TEMP/site" --url="$url" --strict
+      # The template's own repository only: the README's licence commands run against a copy of
+      # hub.yaml with a throwaway key made in the runner's temporary folder (never committed, deleted).
+      - name: The README's licence commands
+        if: github.repository == 'glitchr-studio/unity-hub-template'
+        run: |
+          tmp="$RUNNER_TEMP/licence"; mkdir -p "$tmp"; trap 'rm -rf "$tmp"' EXIT
+          sh .github/licence-check.sh "$tmp"

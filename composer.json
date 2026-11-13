@@ -5,13 +5,11 @@
     "license": "MIT",
     "require": {
         "php": ">=8.2",
-        "omnibridge/static": "1.x-dev",
-        "omnihub/github": "1.x-dev",
-        "omnisense/omnihub": "1.x-dev",
+        "omnibridge/static": "^1.0",
+        "omnihub/github": "^1.0",
+        "omnisense/omnihub": "^1.0",
         "symfony/yaml": "^7.0|^8.0"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "config": {
         "sort-packages": true
     }
