@@ -13,6 +13,16 @@ name: My Studio
 #   logo: logo.png
 #   banner: banner.png
 
+# Licences you sign offline, for packages you sell through an outside "get" link: the public key
+# only (see README > Selling with licences). Make the pair with
+#   vendor/bin/omnihub key generate ~/.config/omnihub/my-studio.key
+# - a path OUTSIDE this repository: the private key never goes into it, nor into this file.
+# licensing:
+#   publicKey: "<what key generate printed>"
+#   # After a change of key (vendor/bin/omnihub key rotate <old key file> <new key file>):
+#   # previousKey: "<the old public key>"
+#   # rotation: "<the old key's signature of the new one>"
+
 packages:
   # Each repository whose releases carry the package's tarball (.tgz): see docs/packages.md.
   # - github: acme/unity-tool
